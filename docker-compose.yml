@@ -61,7 +61,13 @@ services:
     ports:
       - "9042:9042"
     volumes:
-      - ./migrations/migration.py:/usr/migration.py
+      - ./migrations/setup.sh:/usr/setup.sh
+      - ./migrations/setup.cql:/usr/setup.cql
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - "chmod +x /usr/setup.sh &&
+       nohup /usr/setup.sh &> /usr/setup.log &
+       docker-entrypoint.sh cassandra -f"
 
   haproxy:
     image: haproxy:2.9-alpine
