@@ -11,17 +11,14 @@ CREATE TABLE IF NOT EXISTS messages.conversations (
     conversation_type text,
     avatar text,
     opposite_party_id uuid,
-    opposite_party_name text,
+    opposite_party_username text,
     last_message_id uuid,
     last_message_content text,
     last_message_timestamp timestamp,
     last_seen_message_id uuid,
     last_seen_message_timestamp timestamp,
-    PRIMARY KEY ((conversation_id, belongs_to))
+    PRIMARY KEY (belongs_to, conversation_id)
 ) WITH compression = {'sstable_compression': 'LZ4Compressor'};
-
--- Create an index on 'conversations'
-CREATE INDEX ON messages.conversations (belongs_to);
 
 -- Create a table 'private_messages'
 CREATE TABLE IF NOT EXISTS messages.private_messages (
