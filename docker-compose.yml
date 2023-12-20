@@ -23,7 +23,7 @@ services:
     environment:
       - APP_PORT=3001
       - DATABASE_URL=
-      - ACCESS_TOKEN_EXPIRATION=3600 # in seconds, default is 24 hours
+      - ACCESS_TOKEN_EXPIRATION=86400 # in seconds, default is 24 hours
       - REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
       - ISSUER=http://streamware.co
       - AUDIENCE=http://streamware.co
