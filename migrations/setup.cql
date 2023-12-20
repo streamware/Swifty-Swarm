@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS messages.conversations (
     conversation_id uuid,
     belongs_to uuid,
     conversation_type text,
-    avatar text,
     opposite_party_id uuid,
     opposite_party_username text,
     last_message_id uuid,
