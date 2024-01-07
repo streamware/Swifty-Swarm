@@ -21,6 +21,7 @@ services:
     ports:
       - "3001:3001"
     environment:
+      - MODE=prod
       - APP_PORT=3001
       - DATABASE_URL=
       - ACCESS_TOKEN_EXPIRATION=86400 # in seconds, default is 24 hours
