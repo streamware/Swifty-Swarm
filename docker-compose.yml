@@ -23,13 +23,13 @@ services:
     environment:
       - MODE=prod
       - APP_PORT=3001
-      - DATABASE_URL=
+      - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5432/auth
       - ACCESS_TOKEN_EXPIRATION=86400 # in seconds, default is 24 hours
       - REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
       - ISSUER=http://streamware.co
       - AUDIENCE=http://streamware.co
     depends_on:
-      - cassandra
+      - postgres
     volumes:
       - './keys/private_key.pem:/app/keys/private_key.pem'
       - './keys/public_key.pem:/app/keys/public_key.pem'
@@ -51,11 +51,16 @@ services:
       - cassandra
     restart: on-failure
 
-  echo-server:
-    image: "jmalloc/echo-server"
+  postgres:
+    image: postgres:16.1-alpine
     ports:
-      - "8080:8080"
-    restart: on-failure
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
 
   cassandra:
     image: cassandra:4.1.0
@@ -89,15 +94,3 @@ services:
 networks:
   proxy:
     external: true
-
-  # postgres:
-  #   image: postgres:16.1-alpine
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - ./postgres-data:/var/lib/postgresql/data
-  #   environment:
-  #     - POSTGRES_PASSWORD=S3cret
-  #     - POSTGRES_USER=citizix_user
-  #     - POSTGRES_DB=citizix_db
-
