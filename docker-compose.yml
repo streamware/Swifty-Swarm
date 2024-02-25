@@ -17,7 +17,7 @@ services:
     # build: 
     #   context: ./Artemis
     #   dockerfile: Dockerfile
-    image: ghcr.io/streamware/artemis
+    image: ghcr.io/streamware/streamware-idp
     ports:
       - "3001:3001"
     environment:
