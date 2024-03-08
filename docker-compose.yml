@@ -4,7 +4,7 @@ services:
     # build: 
     #   context: ./Athena-Another-Clone
     #   dockerfile: Dockerfile
-    image: ghcr.io/streamware/athena
+    image: streamware/athena
     ports:
       - "9000:9000"
     environment:
@@ -39,7 +39,7 @@ services:
     # build: 
     #   context: ./swify-rest-engine
     #   dockerfile: Dockerfile
-    image: ghcr.io/streamware/swifty-rest-engine
+    image: streamware/swifty-rest-engine
     ports:
       - "3000:3000"
     environment:
@@ -52,7 +52,7 @@ services:
     restart: on-failure
 
   postgres:
-    image: postgres:16.1-alpine
+    image: postgres:16.2-bookworm
     ports:
       - "5432:5432"
     volumes:
