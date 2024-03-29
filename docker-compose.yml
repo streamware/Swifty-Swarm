@@ -13,21 +13,25 @@ services:
       - cassandra
     restart: on-failure
 
-  artemis:
+  auth:
     # build: 
     #   context: ./Artemis
     #   dockerfile: Dockerfile
-    image: ghcr.io/streamware/streamware-idp
+    image: streamware/auth
     ports:
       - "3001:3001"
     environment:
       - MODE=prod
       - APP_PORT=3001
       - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5432/auth
-      - ACCESS_TOKEN_EXPIRATION=86400 # in seconds, default is 24 hours
+      - ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
       - REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
       - ISSUER=http://streamware.co
       - AUDIENCE=http://streamware.co
+      - AWS_S3_ENDPOINT= # it should be without http:// or https://
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - AWS_S3_AVATAR_BUCKET=
     depends_on:
       - postgres
     volumes:
