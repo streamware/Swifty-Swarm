@@ -3,6 +3,7 @@ services:
   messenger-engine:
     image: streamware/messenger-engine
     ports:
+      - "9000:9000"
       - "3002:3002"
     environment:
       - APP_PORT=3002
