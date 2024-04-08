@@ -1,11 +1,14 @@
 version: '3.8'
 services:
-  athena:
-    image: streamware/athena
+  messenger-engine:
+    image: streamware/messenger-engine
     ports:
       - "9000:9000"
     environment:
-      - SCYLLA_URI=cassandra:9042
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
     depends_on:
       - cassandra
     restart: on-failure
@@ -85,18 +88,6 @@ services:
     networks:
       - default
       - proxy
-
-  pulsar:
-    image: "apachepulsar/pulsar:3.2.2"
-    command: bin/pulsar standalone
-    environment:
-      PULSAR_MEM: " -Xms512m -Xmx512m -XX:MaxDirectMemorySize=1g"
-    volumes:
-      - ./pulsar/data:/pulsar/data
-    ports:
-      - "6650:6650"
-      - "8080:8080"
-    restart: unless-stopped
 
 networks:
   proxy:
