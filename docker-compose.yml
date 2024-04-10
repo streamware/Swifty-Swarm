@@ -38,6 +38,17 @@ services:
       - './keys/public_key.pem:/app/keys/public_key.pem'
     restart: on-failure
 
+  notify-hub:
+    image: streamware/notify-hub
+    ports:
+      - "3004:3004"
+    environment:
+      - APP_PORT=3004
+      - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5431/notify-hub
+    depends_on:
+      - postgres-notify-hub
+    restart: on-failure
+
   swift-rest-engine:
     image: streamware/swifty-rest-engine
     ports:
@@ -51,10 +62,21 @@ services:
       - cassandra
     restart: on-failure
 
-  postgres:
+  postgres-notify-hub:
     image: postgres:16.2-bookworm
     ports:
       - "5432:5432"
+    volumes:
+      - ./postgres-notify-hub-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=notify-hub
+
+  postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5431:5432"
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
     environment:
