@@ -69,9 +69,22 @@ services:
     volumes:
       - ./postgres-notify-hub-data:/var/lib/postgresql/data
     environment:
+      - NATS_JETSTREAM_SERVERS=nats:4222
       - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - POSTGRES_USER=postgres
       - POSTGRES_DB=notify-hub
+
+  nats:
+    container_name: nats
+    image: nats
+    entrypoint: /nats-server
+    command: --name nats --cluster_name JSC --js --sd /data -p 4222
+    networks:
+    - nats
+    ports:
+    - 4222:4222
+    volumes:
+    - ./jetstream-cluster/n1:/data
 
   postgres:
     image: postgres:16.2-bookworm
@@ -115,4 +128,6 @@ services:
 
 networks:
   proxy:
+    external: true
+  nats:
     external: true
