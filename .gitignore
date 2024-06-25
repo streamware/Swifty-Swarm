@@ -1,4 +1,6 @@
 .env
 /keys
 /postgres-data
+/postgres-notify-hub-data
 /data
+/apache
