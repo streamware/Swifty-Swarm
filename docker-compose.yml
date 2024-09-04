@@ -21,9 +21,12 @@ services:
     environment:
       - MODE=prod
       - APP_PORT=3001
-      # - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5432/auth
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5432/auth
+      # - DATABASE_URL=file:./dev.db
       - PULSAR_SERVICE_URL=pulsar://broker:6650
+      - PULSAR_OPERATION_TIMEOUT_SECONDS=5
+      - PULSAR_IO_THREADS=5
+      - PULSAR_MESSAGE_LISTENER_THREADS=5
       - ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
       - REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
       - ISSUER=http://streamware.co
@@ -34,21 +37,27 @@ services:
       - AWS_S3_AVATAR_BUCKET=
     depends_on:
       - postgres
+      - broker
     volumes:
       - './keys/private_key.pem:/app/keys/private_key.pem'
       - './keys/public_key.pem:/app/keys/public_key.pem'
     restart: on-failure
+    networks:
+      - default
+      - pulsar
 
-  notify-hub:
-    image: streamware/notify-hub
+  pulse-cast:
+    image: streamware/pulse-cast
     ports:
-      - "3004:3004"
+      - "9090:8080"
     environment:
-      - APP_PORT=3004
-      - PULSAR_SERVICE_URL=pulsar://broker:6650
-      - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres-notify-hub:5431/notify-hub
-      - SENTRY_DSN=https://470ed015c1d7242b17c4ed62a59591dc@o4507489287864320.ingest.de.sentry.io/4507489333870672
-      - SENTRY_DEBUG=true
+      - APP_PORT=8080
+      - PULSAR_ADDRESS=pulsar://broker:6650
+      - DATABASE_URL=file:postgres://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@127.0.0.1:5432/notify-hub
+      - FIREBASE_PROJECT_ID=pheme-1c7fd
+      - FIREBASE_PRIVATE_KEY_ID=88f6a3c9cb736466ef4b1c1424853d88a9b0fd3e
+      - FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCgBMajqcen2UsE\no8axYYnHv72qYp4jNTM+gRCTvq0Gp0p0d1pnjBMl1QPoQdVPIOm+/aJIyPT+tvHM\ncQO2y/Ddrv32AvoB3VIPA5JYoUZxvF4YIUs/oEQUr+3xM2BmKHpMXuTsJeqnCxHN\ngHHmkVGklOj5vP9/ShAuiJPRRid4WNWIAXHuL9DIVVSUyYpZNqfWwdT8w7GpV5bO\nx5jhYeybZY9xFaLqVBd2vnsMDHv2+WgWA7egEEd0VW2Nnld6w1PESC7l+iIqgdrU\noRO/LMUgaeEzeAuNYRNP0Tfo1h6KswUFmHItyIK7Xq15G/HbmYFCd2kLwp296S0l\nk+eeLkDbAgMBAAECggEALYKOOBfeV8d+BXjK1sIF3JCU0bOwhBTqWRl97HcrYJwN\nmegkBxUYkQbvUIwArbuPnyklkYvN2e+P/3QY+VExVOsjAWfBUOxwHSMH6Tsc/NX0\n8OnvK85Z7oRGqPXSsdtLRRMsClmSTiXgz1B7lHa6AJP1Wqm9BKe8yG9BkyBfs2Mk\nxXdSLfnHUpXpNRbGQ8nmqfUTTcoxp4woTJ5ZDgA7XtpJ1Rk2YZlMJP2jyHZJ51pi\nbuZfyF4t0y5BJSSD7j1GkCPnWIzC1hBz3IMtyQbOiwvtqckN5I1jrtBU1lVB+Q9E\nimXTfqE9hpickoR0KBemB5IwF5fT1YI/RR6Wk6O26QKBgQDgJzQ/HHg1We8FE56E\neAhQzqv2t1BEf3S9a86KFffflzCy+08cJjnv2iKHyiCmaTg/WEkn+sQXHwUvnX7o\nyowb9XxLJQhREzkPOHGTYh0bCYJrdwdDxPHYCD5+2LwFmLUuJZ4Uo2diTAvDupR3\nZAJXn7QvbobGVJct0ptXb1wqlQKBgQC2wObOBD9euBi2chn1rcGYufBa+E9vgIbe\n0JuOjKggVwRv6O0WMxGaAO4SoEN0yMu5WWnf3AtfVAj36c88G2XkGmm4s/3Jvs1E\nWhEBpRdcmcLm+252svMbvfcu0IlmFqHdK4NzzFK0BA3vdMKVQYUWD5fJeU4Ww8MF\n1ExcyORRrwKBgD2/zw7Lwvm/iq71VqfbgT7xkEHpAf28tuYvurgjkSNRPSMxQ/vX\nNAK1LuoFbrUpK0uYAJ8436gW7ZDObFWo5qwVFmaFDyN2jjN5MyCM2MPH/Nup8KBk\nstL2gnDjN/i6tr69siyxTxuvI1aKIbg6HsMQxcyDQDGGwBbpe828acF5AoGAOGPh\nU+RfoVxw06r1c6c/u150Wb2Q1Tj1ZL89oIiqQABZsCZRMa5kWf67dyfYaKqkofaD\nAr4lDC8j7UtJ1KQnlnDH+mQfhSbIs7SO1tEYGkyfpSIj/aBN/1tocBuMqeGF5HbO\nwuZjBoTRv/dpKyDibeI11ccGX2PcQ2o0fdTHDqUCgYBdN+vQqIaY6OKiz5LYGIQZ\nxorWqTweLvPfzpDdrreazjZUKeGropT8Emj6lfruFZZLEcpuTbrAq2lue5LrJ3o+\nn21RPGTTXjWihDWrbr7QDXkQsalCPE6LZfKKVUXvdG9YFCxLsMg+Xremh9w0gab1\nQMFzkxudngC18zchTjJqng==\n-----END PRIVATE KEY-----\n"
+      - FIREBASE_CLIENT_EMAIL=firebase-adminsdk-t3dhj@pheme-1c7fd.iam.gserviceaccount.com
     depends_on:
       - postgres-notify-hub
     restart: on-failure
