@@ -2,6 +2,9 @@ version: '3.8'
 services:
   messenger-engine:
     image: streamware/messenger-core-engine
+    # build:
+    #   context: ./../../RustroverProjects/Athena
+    #   dockerfile: Dockerfile
     ports:
       - "9000:9000"
     environment:
@@ -16,6 +19,9 @@ services:
 
   auth:
     image: streamware/auth
+    # build:
+    #   context: ./../Auth
+    #   dockerfile: Dockerfile
     ports:
       - "3001:3001"
     environment:
@@ -48,6 +54,9 @@ services:
 
   pulse-cast:
     image: streamware/pulse-cast
+    # build:
+    #   context: ./../../RustroverProjects/pulse-cast
+    #   dockerfile: Dockerfile
     ports:
       - "9090:8080"
     environment:
@@ -67,6 +76,9 @@ services:
 
   swift-rest-engine:
     image: streamware/swifty-rest-engine
+    # build:
+    #   context: ./../Swifty-REST-Engine
+    #   dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -88,18 +100,8 @@ services:
       - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - POSTGRES_USER=postgres
       - POSTGRES_DB=notify-hub
-
-  nats:
-    container_name: nats
-    image: nats
-    entrypoint: /nats-server
-    command: --name nats --cluster_name JSC --js --sd /data -p 4222
     networks:
-    - nats
-    ports:
-    - 4222:4222
-    volumes:
-    - ./jetstream-cluster/n1:/data
+      - default
 
   postgres:
     image: postgres:16.2-bookworm
