@@ -1,0 +1,23 @@
+---
+- name: Configure Application Servers
+  hosts: all
+  become: yes
+
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest
+
+
+    - name: Start Nginx Service
+      service:
+        name: nginx
+        state: started
+        enabled: yes

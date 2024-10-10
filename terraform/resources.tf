@@ -69,3 +69,13 @@ resource "arvan_abrak" "built_by_terraform" {
   security_groups = [arvan_security_group.terraform_security_group.id]
   volumes         = [arvan_volume.terraform_volume.id]
 }
+
+resource "null_resource" "run_ansible" {
+  depends_on = [arvan_abrak.built_by_terraform]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      ansible-playbook -i "${element([for net in arvan_abrak.built_by_terraform[0].networks : net.ip if net.is_public], 0)}," --extra-vars "ansible_password=${arvan_abrak.built_by_terraform[0].password}" /nginx.yml
+    EOT
+  }
+}
