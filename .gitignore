@@ -2,6 +2,7 @@
 /keys
 /postgres-data
 /postgres-notify-hub-data
+/keycloak-db
 /data
 /apache
 

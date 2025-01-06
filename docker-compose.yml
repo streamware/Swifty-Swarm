@@ -1,5 +1,43 @@
-version: '3.8'
+version: "3.8"
 services:
+  keycloak_web:
+    image: quay.io/keycloak/keycloak:26.0.7
+    container_name: keycloak_web
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloakdb:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak-password
+
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+
+      KC_LOG_LEVEL: info
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    command: start-dev
+    depends_on:
+      - keycloakdb
+    ports:
+      - 8080:8080
+
+  keycloakdb:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./keycloak-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=keycloak-password
+      - POSTGRES_USER=keycloak
+      - POSTGRES_DB=keycloak
+
   messenger-engine:
     image: streamware/messenger-core-engine
     # build:
@@ -45,8 +83,8 @@ services:
       - postgres
       - broker
     volumes:
-      - './keys/private_key.pem:/app/keys/private_key.pem'
-      - './keys/public_key.pem:/app/keys/public_key.pem'
+      - "./keys/private_key.pem:/app/keys/private_key.pem"
+      - "./keys/public_key.pem:/app/keys/public_key.pem"
     restart: on-failure
     networks:
       - default
@@ -124,16 +162,16 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command:
       - "chmod +x /usr/setup.sh &&
-       nohup /usr/setup.sh &> /usr/setup.log &
-       docker-entrypoint.sh cassandra -f"
+        nohup /usr/setup.sh &> /usr/setup.log &
+        docker-entrypoint.sh cassandra -f"
 
   haproxy:
     image: haproxy:2.9-alpine
     restart: always
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - './keys/private_key.pem:/app/keys/private_key.pem'
-      - './keys/public_key.pem:/app/keys/public_key.pem'
+      - "./keys/private_key.pem:/app/keys/private_key.pem"
+      - "./keys/public_key.pem:/app/keys/public_key.pem"
     ports:
       - "80:80"
     environment:
@@ -163,7 +201,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
-  
 
   pulsar-init:
     container_name: pulsar-init
@@ -181,7 +218,6 @@ services:
     depends_on:
       zookeeper:
         condition: service_healthy
-
 
   bookie:
     image: apachepulsar/pulsar:latest
@@ -206,7 +242,6 @@ services:
     volumes:
       - ./apache/bookkeeper:/pulsar/data/bookkeeper
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
-
 
   broker:
     image: apachepulsar/pulsar:latest
@@ -233,7 +268,7 @@ services:
     ports:
       - "6650:6650"
       - "8080:8080"
-    command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker" 
+    command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
 
 networks:
   proxy:
