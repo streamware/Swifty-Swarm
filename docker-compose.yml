@@ -1,132 +1,84 @@
-version: "3.8"
 services:
-  keycloak_web:
-    image: quay.io/keycloak/keycloak:26.0.7
-    container_name: keycloak_web
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloakdb:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak-password
-
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
-
-      KC_LOG_LEVEL: info
-      KC_METRICS_ENABLED: true
-      KC_HEALTH_ENABLED: true
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-    command: start-dev
-    depends_on:
-      - keycloakdb
-    ports:
-      - 8080:8080
-
-  keycloakdb:
-    image: postgres:16.2-bookworm
-    ports:
-      - "5433:5432"
-    volumes:
-      - ./keycloak-db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=keycloak-password
-      - POSTGRES_USER=keycloak
-      - POSTGRES_DB=keycloak
-
   messenger-engine:
-    image: streamware/messenger-core-engine
-    # build:
-    #   context: ./../../RustroverProjects/Athena
-    #   dockerfile: Dockerfile
+    image: streamware/messenger-engine
     ports:
       - "9000:9000"
     environment:
-      - SCYLLA_URI=cassandra:9042
-      - PULSAR_SERVICE_URL=pulsar://broker:6650
+      - NAME=A
+      - APP_PORT=9000
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+      - REDIS_HOST=dragonfly
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - DB_TYPE=postgres
+      - DB_HOST=localhost
+      - DB_PORT=5430
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - DB_NAME=presence
+      - DB_SYNCHRONIZE=true
     depends_on:
       - cassandra
     restart: on-failure
-    networks:
-      - default
-      - pulsar
 
   auth:
     image: streamware/auth
-    # build:
-    #   context: ./../Auth
-    #   dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "8080:8080"
     environment:
-      - MODE=prod
-      - APP_PORT=3001
-      - DATABASE_URL=postgresql://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@postgres:5432/auth
-      # - DATABASE_URL=file:./dev.db
-      - PULSAR_SERVICE_URL=pulsar://broker:6650
-      - PULSAR_OPERATION_TIMEOUT_SECONDS=5
-      - PULSAR_IO_THREADS=5
-      - PULSAR_MESSAGE_LISTENER_THREADS=5
-      - ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
-      - REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
-      - ISSUER=http://streamware.co
-      - AUDIENCE=http://streamware.co
-      - AWS_S3_ENDPOINT= # it should be without http:// or https://
-      - AWS_ACCESS_KEY_ID=
-      - AWS_SECRET_ACCESS_KEY=
-      - AWS_S3_AVATAR_BUCKET=
+      - NAME=Auth
+      - SERVER_PORT=8080
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
+      - JWT_REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
+      - JWT_ISSUER=http://streamware.ir
+      - JWT_AUDIENCE=http://streamware.ir
     depends_on:
       - postgres
-      - broker
     volumes:
       - "./keys/private_key.pem:/app/keys/private_key.pem"
       - "./keys/public_key.pem:/app/keys/public_key.pem"
     restart: on-failure
     networks:
-      - default
-      - pulsar
+      - kafka
 
   pulse-cast:
     image: streamware/pulse-cast
-    # build:
-    #   context: ./../../RustroverProjects/pulse-cast
-    #   dockerfile: Dockerfile
     ports:
-      - "9090:8080"
+      - "9090:8081"
     environment:
-      - APP_PORT=8080
-      - PULSAR_ADDRESS=pulsar://broker:6650
-      - DATABASE_URL=file:postgres://postgres:6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5@127.0.0.1:5432/notify-hub
-      - FIREBASE_PROJECT_ID=pheme-1c7fd
-      - FIREBASE_PRIVATE_KEY_ID=88f6a3c9cb736466ef4b1c1424853d88a9b0fd3e
-      - FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCgBMajqcen2UsE\no8axYYnHv72qYp4jNTM+gRCTvq0Gp0p0d1pnjBMl1QPoQdVPIOm+/aJIyPT+tvHM\ncQO2y/Ddrv32AvoB3VIPA5JYoUZxvF4YIUs/oEQUr+3xM2BmKHpMXuTsJeqnCxHN\ngHHmkVGklOj5vP9/ShAuiJPRRid4WNWIAXHuL9DIVVSUyYpZNqfWwdT8w7GpV5bO\nx5jhYeybZY9xFaLqVBd2vnsMDHv2+WgWA7egEEd0VW2Nnld6w1PESC7l+iIqgdrU\noRO/LMUgaeEzeAuNYRNP0Tfo1h6KswUFmHItyIK7Xq15G/HbmYFCd2kLwp296S0l\nk+eeLkDbAgMBAAECggEALYKOOBfeV8d+BXjK1sIF3JCU0bOwhBTqWRl97HcrYJwN\nmegkBxUYkQbvUIwArbuPnyklkYvN2e+P/3QY+VExVOsjAWfBUOxwHSMH6Tsc/NX0\n8OnvK85Z7oRGqPXSsdtLRRMsClmSTiXgz1B7lHa6AJP1Wqm9BKe8yG9BkyBfs2Mk\nxXdSLfnHUpXpNRbGQ8nmqfUTTcoxp4woTJ5ZDgA7XtpJ1Rk2YZlMJP2jyHZJ51pi\nbuZfyF4t0y5BJSSD7j1GkCPnWIzC1hBz3IMtyQbOiwvtqckN5I1jrtBU1lVB+Q9E\nimXTfqE9hpickoR0KBemB5IwF5fT1YI/RR6Wk6O26QKBgQDgJzQ/HHg1We8FE56E\neAhQzqv2t1BEf3S9a86KFffflzCy+08cJjnv2iKHyiCmaTg/WEkn+sQXHwUvnX7o\nyowb9XxLJQhREzkPOHGTYh0bCYJrdwdDxPHYCD5+2LwFmLUuJZ4Uo2diTAvDupR3\nZAJXn7QvbobGVJct0ptXb1wqlQKBgQC2wObOBD9euBi2chn1rcGYufBa+E9vgIbe\n0JuOjKggVwRv6O0WMxGaAO4SoEN0yMu5WWnf3AtfVAj36c88G2XkGmm4s/3Jvs1E\nWhEBpRdcmcLm+252svMbvfcu0IlmFqHdK4NzzFK0BA3vdMKVQYUWD5fJeU4Ww8MF\n1ExcyORRrwKBgD2/zw7Lwvm/iq71VqfbgT7xkEHpAf28tuYvurgjkSNRPSMxQ/vX\nNAK1LuoFbrUpK0uYAJ8436gW7ZDObFWo5qwVFmaFDyN2jjN5MyCM2MPH/Nup8KBk\nstL2gnDjN/i6tr69siyxTxuvI1aKIbg6HsMQxcyDQDGGwBbpe828acF5AoGAOGPh\nU+RfoVxw06r1c6c/u150Wb2Q1Tj1ZL89oIiqQABZsCZRMa5kWf67dyfYaKqkofaD\nAr4lDC8j7UtJ1KQnlnDH+mQfhSbIs7SO1tEYGkyfpSIj/aBN/1tocBuMqeGF5HbO\nwuZjBoTRv/dpKyDibeI11ccGX2PcQ2o0fdTHDqUCgYBdN+vQqIaY6OKiz5LYGIQZ\nxorWqTweLvPfzpDdrreazjZUKeGropT8Emj6lfruFZZLEcpuTbrAq2lue5LrJ3o+\nn21RPGTTXjWihDWrbr7QDXkQsalCPE6LZfKKVUXvdG9YFCxLsMg+Xremh9w0gab1\nQMFzkxudngC18zchTjJqng==\n-----END PRIVATE KEY-----\n"
-      - FIREBASE_CLIENT_EMAIL=firebase-adminsdk-t3dhj@pheme-1c7fd.iam.gserviceaccount.com
+      - NAME=pulse-cast
+      - SERVER_PORT=8081
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - REDIS_HOST=dragonfly
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
     depends_on:
       - postgres-notify-hub
     restart: on-failure
     networks:
-      - default
-      - pulsar
+      - kafka
 
-  swift-rest-engine:
-    image: streamware/swifty-rest-engine
-    # build:
-    #   context: ./../Swifty-REST-Engine
-    #   dockerfile: Dockerfile
+  messenger-rest-engine:
+    image: streamware/messenger-rest-engine
     ports:
-      - "3000:3000"
+      - "8083:8083"
     environment:
-      - CASSANDRA_HOST=cassandra
-      - CASSANDRA_PORT=9042
-      - CASSANDRA_USER=cassandra
+      - NAME=messenger-rest-engine
+      - SERVER_PORT=8083
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_KEYSPACE=messages
+      - CASSANDRA_DATACENTER=datacenter1
+      - CASSANDRA_USERNAME=cassandra
       - CASSANDRA_PASSWORD=cassandra
     depends_on:
-      - cassandra
+      - postgres-notify-hub
     restart: on-failure
+    networks:
+      - cassandra
 
   postgres-notify-hub:
     image: postgres:16.2-bookworm
@@ -139,7 +91,18 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=notify-hub
     networks:
-      - default
+      - postgres-pulse-cast
+
+  postgres-presence:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5430:5432"
+    volumes:
+      - ./postgres-presence-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=presence
 
   postgres:
     image: postgres:16.2-bookworm
@@ -151,9 +114,24 @@ services:
       - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - POSTGRES_USER=postgres
       - POSTGRES_DB=auth
+    networks:
+      - postgres
+
+  pulse-cast-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pulse-cast-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=pulse-cast
+    networks:
+      - postgres
 
   cassandra:
-    image: cassandra:4.1.0
+    image: cassandra:5.0.3
     ports:
       - "9042:9042"
     volumes:
@@ -164,6 +142,8 @@ services:
       - "chmod +x /usr/setup.sh &&
         nohup /usr/setup.sh &> /usr/setup.log &
         docker-entrypoint.sh cassandra -f"
+    networks:
+      - cassandra
 
   haproxy:
     image: haproxy:2.9-alpine
@@ -175,104 +155,62 @@ services:
     ports:
       - "80:80"
     environment:
-      - ISSUER=http://streamware.co
-      - AUDIENCE=http://streamware.co
+      - ISSUER=http://streamware.ir
+      - AUDIENCE=http://streamware.ir
     networks:
       - default
-      - proxy
 
   zookeeper:
-    image: apachepulsar/pulsar:latest
-    container_name: zookeeper
-    restart: on-failure
-    networks:
-      - pulsar
-    volumes:
-      - ./apache/zookeeper:/pulsar/data/zookeeper
+    image: confluentinc/cp-zookeeper:7.8.0
     environment:
-      - metadataStoreUrl=zk:zookeeper:2181
-      - PULSAR_MEM=-Xms256m -Xmx256m -XX:MaxDirectMemorySize=256m
-    command: >
-      bash -c "bin/apply-config-from-env.py conf/zookeeper.conf && \
-             bin/generate-zookeeper-config.sh conf/zookeeper.conf && \
-             exec bin/pulsar zookeeper"
-    healthcheck:
-      test: ["CMD", "bin/pulsar-zookeeper-ruok.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-
-  pulsar-init:
-    container_name: pulsar-init
-    hostname: pulsar-init
-    image: apachepulsar/pulsar:latest
-    networks:
-      - pulsar
-    command: >
-      bin/pulsar initialize-cluster-metadata \
-               --cluster cluster-a \
-               --zookeeper zookeeper:2181 \
-               --configuration-store zookeeper:2181 \
-               --web-service-url http://broker:8080 \
-               --broker-service-url pulsar://broker:6650
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-
-  bookie:
-    image: apachepulsar/pulsar:latest
-    container_name: bookie
-    restart: on-failure
-    networks:
-      - pulsar
-    environment:
-      - clusterName=cluster-a
-      - zkServers=zookeeper:2181
-      - metadataServiceUri=metadata-store:zk:zookeeper:2181
-      # otherwise every time we run docker compose uo or down we fail to start due to Cookie
-      # See: https://github.com/apache/bookkeeper/blob/405e72acf42bb1104296447ea8840d805094c787/bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Cookie.java#L57-68
-      - advertisedAddress=bookie
-      - BOOKIE_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-      pulsar-init:
-        condition: service_completed_successfully
-    # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
-    volumes:
-      - ./apache/bookkeeper:/pulsar/data/bookkeeper
-    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
-
-  broker:
-    image: apachepulsar/pulsar:latest
-    container_name: broker
-    hostname: broker
-    restart: on-failure
-    networks:
-      - pulsar
-    environment:
-      - metadataStoreUrl=zk:zookeeper:2181
-      - zookeeperServers=zookeeper:2181
-      - clusterName=cluster-a
-      - managedLedgerDefaultEnsembleSize=1
-      - managedLedgerDefaultWriteQuorum=1
-      - managedLedgerDefaultAckQuorum=1
-      - advertisedAddress=broker
-      - advertisedListeners=external:pulsar://127.0.0.1:6650
-      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-      bookie:
-        condition: service_started
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "6650:6650"
-      - "8080:8080"
-    command: bash -c "bin/apply-config-from-env.py conf/broker.conf && exec bin/pulsar broker"
+      - 2181:2181
+    networks:
+      - kafka
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka
+
+  dragonfly:
+    image: "docker.dragonflydb.io/dragonflydb/dragonfly"
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    # For better performance, consider `host` mode instead `port` to avoid docker NAT.
+    # `host` mode is NOT currently supported in Swarm Mode.
+    # https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
+    # network_mode: "host"
+    volumes:
+      - dragonflydata:/data
+volumes:
+  dragonflydata:
 
 networks:
   proxy:
     external: true
-  pulsar:
+  kafka:
     driver: bridge
     external: true
+  cassandra:
+    driver: bridge
+  postgres:
+    driver: bridge
+  postgres-pulse-cast:
+    driver: bridge
