@@ -2,8 +2,14 @@
 /keys
 /postgres-data
 /postgres-notify-hub-data
+/postgres-presence-data
+/pulse-cast-postgres-data
+/keycloak-db
 /data
 /apache
+
+
+.idea
 
 # Compiled files
 *.tfstate
