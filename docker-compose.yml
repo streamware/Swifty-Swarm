@@ -53,6 +53,9 @@ services:
       - NAME=pulse-cast
       - SERVER_PORT=8081
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - DB_URL=r2dbc:postgresql://postgres-pulse-cast:5434/pulse-cast
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - REDIS_HOST=dragonfly
       - REDIS_PORT=6379
       - REDIS_PASSWORD=
@@ -61,6 +64,32 @@ services:
     restart: on-failure
     networks:
       - kafka
+      - dragonfly
+      - postgres-pulse-cast
+
+  user-service:
+    image: streamware/user-service
+    ports:
+      - "8084:8084"
+    environment:
+      - NAME=user-service
+      - SERVER_PORT=8084
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - DB_URL=r2dbc:postgresql://user-service-postgres:5435/user-service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - ELASTIC_URIS=elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
+    restart: on-failure
+    networks:
+      - user-service-postgres
+      - kafka
+      - elasticsearch
+    depends_on:
+      - user-service-postgres
+      - kafka
+      - elasticsearch
 
   messenger-rest-engine:
     image: streamware/messenger-rest-engine
@@ -83,7 +112,7 @@ services:
   postgres-notify-hub:
     image: postgres:16.2-bookworm
     ports:
-      - "5431:5432"
+      - "5434:5432"
     volumes:
       - ./postgres-notify-hub-data:/var/lib/postgresql/data
     environment:
@@ -120,15 +149,35 @@ services:
   pulse-cast-postgres:
     image: postgres:16.2-bookworm
     ports:
-      - "5432:5432"
+      - "5431:5432"
     volumes:
       - ./pulse-cast-postgres-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - POSTGRES_USER=postgres
       - POSTGRES_DB=pulse-cast
-    networks:
-      - postgres
+
+  user-service-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./user-service-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=user-service
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
 
   cassandra:
     image: cassandra:5.0.3
@@ -188,7 +237,7 @@ services:
       - kafka
 
   dragonfly:
-    image: "docker.dragonflydb.io/dragonflydb/dragonfly"
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
     ulimits:
       memlock: -1
     ports:
@@ -213,4 +262,10 @@ networks:
   postgres:
     driver: bridge
   postgres-pulse-cast:
+    driver: bridge
+  user-service-postgres:
+    driver: bridge
+  dragonfly:
+    driver: bridge
+  elasticsearch:
     driver: bridge
