@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS messages.conversations (
     last_seen_message_id uuid,
     last_seen_message_timestamp timestamp,
     PRIMARY KEY (belongs_to, conversation_id)
-) WITH compression = {'sstable_compression': 'LZ4Compressor'};
+) WITH compression = {'class': 'LZ4Compressor'};
 
 -- Create a table 'private_messages'
 CREATE TABLE IF NOT EXISTS messages.private_messages (
@@ -30,4 +30,4 @@ CREATE TABLE IF NOT EXISTS messages.private_messages (
     updated_at timestamp,
     PRIMARY KEY ((conversation_id, recipient_id), created_at, id)
 ) WITH CLUSTERING ORDER BY (created_at DESC, id ASC)
-AND compression = {'sstable_compression': 'LZ4Compressor'};
+AND compression = {'class': 'LZ4Compressor'};
