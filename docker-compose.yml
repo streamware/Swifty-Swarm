@@ -14,8 +14,8 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=
       - DB_TYPE=postgres
-      - DB_HOST=localhost
-      - DB_PORT=5430
+      - DB_HOST=postgres-presence
+      - DB_PORT=5432
       - DB_USERNAME=postgres
       - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - DB_NAME=presence
@@ -23,6 +23,10 @@ services:
     depends_on:
       - cassandra
     restart: on-failure
+    networks:
+      - default
+      - postgres-presence
+      - dragonfly
 
   auth:
     image: streamware/auth
@@ -31,7 +35,9 @@ services:
     environment:
       - NAME=Auth
       - SERVER_PORT=8080
-      - JWT_SECRET=secret
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - JWT_PRIVATE_KEY_PATH=/app/keys/private_key.pem
+      - JWT_PUBLIC_KEY_PATH=/app/keys/public_key.pem
       - JWT_ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
       - JWT_REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
       - JWT_ISSUER=http://streamware.ir
@@ -39,10 +45,11 @@ services:
     depends_on:
       - postgres
     volumes:
-      - "./keys/private_key.pem:/app/keys/private_key.pem"
-      - "./keys/public_key.pem:/app/keys/public_key.pem"
+      - "./keys:/app/keys"
+      - "./keys:/app/keys"
     restart: on-failure
     networks:
+      - default
       - kafka
 
   pulse-cast:
@@ -66,6 +73,7 @@ services:
       - dragonfly
     restart: on-failure
     networks:
+      - default
       - kafka
       - dragonfly
       - pulse-cast-postgres
@@ -90,6 +98,7 @@ services:
       - SPRING_ELASTICSEARCH_PASSWORD=elastic
     restart: on-failure
     networks:
+      - default
       - user-service-postgres
       - kafka
       - elasticsearch
@@ -114,6 +123,7 @@ services:
       - cassandra
     restart: on-failure
     networks:
+      - default
       - cassandra
 
   postgres-presence:
@@ -126,6 +136,8 @@ services:
       - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - POSTGRES_USER=postgres
       - POSTGRES_DB=presence
+    networks:
+      - postgres-presence
 
   postgres:
     image: postgres:16.2-bookworm
@@ -199,8 +211,8 @@ services:
     restart: always
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - "./keys/private_key.pem:/app/keys/private_key.pem"
-      - "./keys/public_key.pem:/app/keys/public_key.pem"
+      - "./keys:/app/keys"
+      - "./keys:/app/keys"
     ports:
       - "80:80"
     environment:
@@ -266,6 +278,8 @@ networks:
   postgres:
     driver: bridge
   pulse-cast-postgres:
+    driver: bridge
+  postgres-presence:
     driver: bridge
   user-service-postgres:
     driver: bridge
