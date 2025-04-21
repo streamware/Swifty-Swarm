@@ -36,6 +36,9 @@ services:
       - NAME=Auth
       - SERVER_PORT=8080
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DB_URL=jdbc:postgresql://postgres:5432/auth
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - JWT_PRIVATE_KEY_PATH=/app/keys/private_key.pem
       - JWT_PUBLIC_KEY_PATH=/app/keys/public_key.pem
       - JWT_ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
@@ -51,6 +54,7 @@ services:
     networks:
       - default
       - kafka
+      - postgres
 
   pulse-cast:
     image: streamware/pulse-cast
@@ -218,6 +222,12 @@ services:
     environment:
       - ISSUER=http://streamware.ir
       - AUDIENCE=http://streamware.ir
+    depends_on:
+      - auth
+      - pulse-cast
+      - user-service
+      - messenger-rest-engine
+      - messenger-engine
     networks:
       - default
 
