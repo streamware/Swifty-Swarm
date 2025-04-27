@@ -5,9 +5,13 @@
 /postgres-presence-data
 /pulse-cast-postgres-data
 /user-service-postgres-data
-/keycloak-db
 /data
 /apache
+/zookeeper-data
+/elastic-data
+/kafka-data
+/dragonfly-data
+/cassandra-data
 
 
 .idea
