@@ -25,6 +25,7 @@ services:
     restart: on-failure
     networks:
       - default
+      - cassandra
       - postgres-presence
       - dragonfly
 
@@ -192,6 +193,8 @@ services:
       - xpack.security.enabled=false
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elastic
+    volumes:
+      - ./elastic-data:/usr/share/elasticsearch/data
     networks:
       - elasticsearch
 
@@ -202,6 +205,7 @@ services:
     volumes:
       - ./migrations/setup.sh:/usr/setup.sh
       - ./migrations/setup.cql:/usr/setup.cql
+      - ./cassandra-data:/var/lib/cassandra:rw
     entrypoint: ["/bin/bash", "-c"]
     command:
       - "chmod +x /usr/setup.sh &&
@@ -238,6 +242,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 2181:2181
+    volumes:
+      - ./zookeeper-data/data:/var/lib/zookeeper/data
+      - ./zookeeper-data/log:/var/lib/zookeeper/log
     networks:
       - kafka
 
@@ -257,6 +264,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - kafka
+    volumes:
+      - ./kafka-data/data:/var/lib/kafka/data
+    restart: always
 
   dragonfly:
     image: redis:7.2.4
@@ -270,12 +280,9 @@ services:
     # https://docs.docker.com/compose/compose-file/compose-file-v3/#network_mode
     # network_mode: "host"
     volumes:
-      - dragonflydata:/data
+      - ./dragonfly-data:/data
     networks:
       - dragonfly
-
-volumes:
-  dragonflydata:
 
 networks:
   proxy:
