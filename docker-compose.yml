@@ -112,6 +112,27 @@ services:
       - kafka
       - elasticsearch
 
+  media-service:
+    image: streamware/media-service
+    ports:
+      - "8088:8088"
+    environment:
+      - NAME=media-service
+      - SERVER_PORT=8088
+      - AWS_ACCESS_KEY=a2d44080-d46e-4a1c-b9ba-8d32ff947ca5
+      - AWS_SECRET_KEY=6df11d314c5e89c16886ff67a0a6c84992c5f3c37476828f404f5431c21e0f6f
+      - AWS_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.ir
+      - DB_URL=r2dbc:postgresql://media-service-postgres:5432/media-service
+      - FLYWAY_DB_URL=jdbc:postgresql://media-service-postgres:5432/media-service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+    depends_on:
+      - media-service-postgres
+    restart: on-failure
+    networks:
+      - default
+      - media-service-postgres
+
   messenger-rest-engine:
     image: streamware/messenger-rest-engine
     ports:
@@ -182,6 +203,19 @@ services:
       - POSTGRES_DB=user-service
     networks:
       - user-service-postgres
+
+  media-service-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./media-service-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=media-service
+    networks:
+      - media-service-postgres
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.4
@@ -295,6 +329,8 @@ networks:
   postgres:
     driver: bridge
   pulse-cast-postgres:
+    driver: bridge
+  media-service-postgres:
     driver: bridge
   postgres-presence:
     driver: bridge

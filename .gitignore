@@ -5,6 +5,7 @@
 /postgres-presence-data
 /pulse-cast-postgres-data
 /user-service-postgres-data
+/media-service-postgres-data
 /data
 /apache
 /zookeeper-data
