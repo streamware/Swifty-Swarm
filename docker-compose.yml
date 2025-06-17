@@ -119,6 +119,7 @@ services:
     environment:
       - NAME=media-service
       - SERVER_PORT=8088
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - AWS_ACCESS_KEY=a2d44080-d46e-4a1c-b9ba-8d32ff947ca5
       - AWS_SECRET_KEY=6df11d314c5e89c16886ff67a0a6c84992c5f3c37476828f404f5431c21e0f6f
       - AWS_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.ir
@@ -131,6 +132,7 @@ services:
     restart: on-failure
     networks:
       - default
+      - kafka
       - media-service-postgres
 
   messenger-rest-engine:
