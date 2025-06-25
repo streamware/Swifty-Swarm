@@ -6,6 +6,7 @@ import json
 import random
 import os
 import time
+import argparse
 
 from faker import Faker
 from jwt import decode
@@ -21,14 +22,12 @@ FIXED_DEVICE_FINGERPRINT = "test_device_fingerprint_qq"
 FIXED_USER_AGENT = "test_user_agent_qqq"
 
 PROFILE_PHOTO_FILENAMES = [
-    "avatar-1.jpg",
-    "avatar-2.jpg",
+    "avatar-1.png",
+    "avatar-2.png",
     "avatar-3.jpg",
     "avatar-4.jpg",
-    "avatar-5.jpg"
+    "avatar-5.jpeg"
 ]
-
-NUM_USERS_TO_GENERATE = 10
 
 fake = Faker('en_US')
 
@@ -159,7 +158,7 @@ def set_user_description(access_token: str, user_id: str, description: str):
     }
 
     try:
-        response = requests.put(USER_SERVICE_SET_DESCRIPTION_URL, headers=headers, data=description_payload)
+        response = requests.post(USER_SERVICE_SET_DESCRIPTION_URL, headers=headers, data=description_payload)
         response.raise_for_status()
 
         print(f"   [DESCRIPTION] Description set successful for user {user_id}. Status: {response.status_code}")
@@ -234,9 +233,13 @@ def seed_users(num_users: int):
             print(f"   [LOGIN] Successfully logged in {email}. User ID: {user_id}")
             successful_logins += 1
 
+            # Shuffle the PROFILE_PHOTO_FILENAMES list for this user
+            shuffled_photos = PROFILE_PHOTO_FILENAMES.copy()  # Create a copy to avoid modifying the original
+            random.shuffle(shuffled_photos)
+
             # --- Step 3: Upload Multiple Profile Photos ---
             photos_uploaded_count = 0
-            for filename in PROFILE_PHOTO_FILENAMES:
+            for filename in shuffled_photos:
                 photo_path = os.path.join(SCRIPT_DIR, filename)
                 if upload_profile_photo(access_token, user_id, photo_path):
                     photos_uploaded_count += 1
@@ -279,5 +282,8 @@ def seed_users(num_users: int):
 
 # --- Execute the seeding ---
 if __name__ == "__main__":
-    seed_users(NUM_USERS_TO_GENERATE)
+    parser = argparse.ArgumentParser(description="Seed users for microservices")
+    parser.add_argument("num_users", type=int, nargs='?', default=10, help="Number of users to generate (default: 10)")
+    args = parser.parse_args()
+    seed_users(args.num_users)
 
