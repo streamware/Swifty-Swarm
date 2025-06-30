@@ -1,0 +1,131 @@
+version: "3.8"
+
+services:
+  auth:
+    image: streamware/auth
+    ports:
+      - "8080:8080"
+    environment:
+      - NAME=Auth
+      - SERVER_PORT=8080
+      - DB_URL=jdbc:postgresql://postgres:5432/auth
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - JWT_PRIVATE_KEY_PATH=/app/keys/private_key.pem
+      - JWT_PUBLIC_KEY_PATH=/app/keys/public_key.pem
+      - JWT_ACCESS_TOKEN_EXPIRATION=31556952 # in seconds, default is 24 hours
+      - JWT_REFRESH_TOKEN_EXPIRATION=31556952 # in seconds, default 1 year
+      - JWT_ISSUER=http://streamware.ir
+      - JWT_AUDIENCE=http://streamware.ir
+    volumes:
+      - ./keys:/app/keys
+    restart: on-failure
+    networks:
+      - default
+
+  user-service:
+    image: streamware/user-service:0.0.28
+    ports:
+      - "8084:8084"
+    environment:
+      - NAME=user-service
+      - SERVER_PORT=8084
+      - DB_URL=r2dbc:postgresql://user-service-postgres:5432/user-service
+      - FLYWAY_DB_URL=jdbc:postgresql://user-service-postgres:5432/user-service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ELASTIC_URIS=elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
+      - SPRING_ELASTICSEARCH_URIS=elasticsearch:9200
+      - SPRING_ELASTICSEARCH_USERNAME=elastic
+      - SPRING_ELASTICSEARCH_PASSWORD=elastic
+    restart: on-failure
+    networks:
+      - default
+
+  media-service:
+    image: streamware/media-service
+    ports:
+      - "8088:8088"
+    environment:
+      - NAME=media-service
+      - SERVER_PORT=8088
+      - DB_URL=r2dbc:postgresql://user-service-postgres:5432/user-service
+      - FLYWAY_DB_URL=jdbc:postgresql://user-service-postgres:5432/user-service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - AWS_ACCESS_KEY=a2d44080-d46e-4a1c-b9ba-8d32ff947ca5
+      - AWS_SECRET_KEY=6df11d314c5e89c16886ff67a0a6c84992c5f3c37476828f404f5431c21e0f6f
+      - AWS_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.ir
+    restart: on-failure
+    networks:
+      - default
+
+  pulse-cast:
+    image: streamware/pulse-cast
+    ports:
+      - "9090:8081"
+    environment:
+      - NAME=pulse-cast
+      - SERVER_PORT=8081
+      - DB_URL=r2dbc:postgresql://pulse-cast-postgres:5432/pulse-cast
+      - FLYWAY_DB_URL=jdbc:postgresql://pulse-cast-postgres:5432/pulse-cast
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+    restart: on-failure
+    networks:
+      - default
+
+  messenger-engine:
+    image: streamware/messenger-engine
+    ports:
+      - "9000:9000"
+    environment:
+      - NAME=messenger-engine
+      - APP_PORT=9000
+      - DB_TYPE=postgres
+      - DB_HOST=postgres-presence
+      - DB_PORT=5432
+      - DB_SYNCHRONIZE=true
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - DB_NAME=presence
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+    restart: on-failure
+    networks:
+      - default
+
+  messenger-rest-engine:
+    image: streamware/messenger-rest-engine
+    ports:
+      - "8083:8083"
+    environment:
+      - NAME=messenger-rest-engine
+      - SERVER_PORT=8083
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_KEYSPACE=messages
+      - CASSANDRA_DATACENTER=datacenter1
+      - CASSANDRA_USERNAME=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+    restart: on-failure
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: streamware_default

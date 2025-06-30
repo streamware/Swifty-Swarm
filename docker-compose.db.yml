@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./persistence-data/postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=auth
+    networks:
+      - default
+
+  user-service-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./persistence-data/user-service-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=user-service
+    networks:
+      - default
+
+  media-service-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./persistence-data/media-service-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=media-service
+    networks:
+      - default
+
+  pulse-cast-postgres:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5431:5432"
+    volumes:
+      - ./persistence-data/pulse-cast-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=pulse-cast
+    networks:
+      - default
+
+  postgres-presence:
+    image: postgres:16.2-bookworm
+    ports:
+      - "5430:5432"
+    volumes:
+      - ./persistence-data/postgres-presence-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=presence
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: streamware_default

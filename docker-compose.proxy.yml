@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  haproxy:
+    image: haproxy:2.9-alpine
+    restart: always
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./keys:/app/keys
+    ports:
+      - "80:80"
+    environment:
+      - ISSUER=http://streamware.ir
+      - AUDIENCE=http://streamware.ir
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: streamware_default

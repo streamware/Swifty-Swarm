@@ -9,10 +9,9 @@
 /data
 /apache
 /zookeeper-data
-/elastic-data
+/elasticsearch-data
 /kafka-data
-/dragonfly-data
-/cassandra-data
+/persistence-data
 
 
 .idea
