@@ -6,9 +6,11 @@ services:
     environment:
       - NAME=Auth
       - SERVER_PORT=8080
-      - DB_URL=jdbc:postgresql://postgres:5432/auth
+      - DB_URL=r2dbc:postgresql://postgres:5432/auth
+      - FLYWAY_DB_URL=jdbc:postgresql://postgres:5432/auth
       - DB_USERNAME=postgres
       - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - TEMPORAL_ADDRESS=temporal:7233
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - JWT_PRIVATE_KEY_PATH=/app/keys/private_key.pem
       - JWT_PUBLIC_KEY_PATH=/app/keys/public_key.pem
