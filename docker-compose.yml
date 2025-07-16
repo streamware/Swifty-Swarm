@@ -7,4 +7,5 @@ include:
   - docker-compose.elastic.yml
   - docker-compose.proxy.yml
   - docker-compose.cassandra.yml
+  - docker-compose.temporal.yml
   - docker-compose.services.yml
