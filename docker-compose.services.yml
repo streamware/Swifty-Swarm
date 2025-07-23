@@ -1,11 +1,11 @@
 services:
   auth:
-    image: streamware/auth
+    image: streamware/auth:0.0.23
     ports:
-      - "8080:8080"
+      - "6000:6000"
     environment:
       - NAME=Auth
-      - SERVER_PORT=8080
+      - SERVER_PORT=6000
       - DB_URL=r2dbc:postgresql://postgres:5432/auth
       - FLYWAY_DB_URL=jdbc:postgresql://postgres:5432/auth
       - DB_USERNAME=postgres
@@ -53,8 +53,8 @@ services:
     environment:
       - NAME=media-service
       - SERVER_PORT=8088
-      - DB_URL=r2dbc:postgresql://user-service-postgres:5432/user-service
-      - FLYWAY_DB_URL=jdbc:postgresql://user-service-postgres:5432/user-service
+      - DB_URL=r2dbc:postgresql://media-service-postgres:5432/media-service
+      - FLYWAY_DB_URL=jdbc:postgresql://media-service-postgres:5432/media-service
       - DB_USERNAME=postgres
       - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -102,6 +102,25 @@ services:
       - CASSANDRA_PORT=9042
       - CASSANDRA_USER=cassandra
       - CASSANDRA_PASSWORD=cassandra
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+    restart: on-failure
+    networks:
+      - default
+
+  presence:
+    image: streamware/presence
+    ports:
+      - "8082:8082"
+    environment:
+      - NAME=presence
+      - SERVER_PORT=8082
+      - DB_URL=r2dbc:postgresql://postgres-presence:5432/presence
+      - FLYWAY_DB_URL=jdbc:postgresql://postgres-presence:5432/presence
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=
