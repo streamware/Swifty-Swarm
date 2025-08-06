@@ -1,0 +1,23 @@
+services:
+  opa:
+    image: openpolicyagent/opa:1.7.0
+    container_name: opa
+    command:
+      - "run"
+      - "--server"
+      - "--log-level=debug"
+      - "--set=decision_logs.console=true"
+      - "--watch"
+      - "/policies"
+    volumes:
+      - ./opa/policies:/policies:ro
+    ports:
+      - "8181:8181"
+    networks:
+      - default
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: streamware_default
