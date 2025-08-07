@@ -5,6 +5,7 @@ include:
   - docker-compose.kafka.yml
   - docker-compose.redis.yml
   - docker-compose.elastic.yml
+  - docker-compose.opa.yml
   - docker-compose.proxy.yml
   - docker-compose.cassandra.yml
   - docker-compose.temporal.yml
