@@ -1,0 +1,36 @@
+services:
+  scylla:
+    image: scylladb/scylla:6.2.2
+    container_name: scylla
+    restart: unless-stopped
+    command: >
+      --developer-mode 1
+      --smp 1
+      --memory 2G
+      --overprovisioned 1
+    ports:
+      - "9042:9042"
+    volumes:
+      - scylla_data:/var/lib/scylla
+    networks:
+      - default
+
+  scylla-init:
+    image: scylladb/scylla:6.2.2
+    depends_on:
+      - scylla
+    restart: no
+    volumes:
+      - ./migrations/setup.cql:/usr/setup.cql:ro
+      - ./migrations/setup.sh:/usr/init.sh:ro
+    entrypoint: ["/bin/bash", "-c", "/usr/init.sh"]
+    networks:
+      - default
+
+volumes:
+  scylla_data:
+
+networks:
+  default:
+    external: true
+    name: streamware_default

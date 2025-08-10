@@ -8,6 +8,7 @@ services:
       - discovery.type=single-node
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elastic
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
     volumes:
       - ./elasticsearch-data:/usr/share/elasticsearch/data
     networks:
