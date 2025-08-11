@@ -1,10 +1,11 @@
--- Create the 'messages' keyspace
-CREATE KEYSPACE IF NOT EXISTS messages WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+CREATE KEYSPACE IF NOT EXISTS messages
+WITH replication = {
+  'class': 'SimpleStrategy',
+  'replication_factor': 1
+};
 
--- Use the 'messages' keyspace
 USE messages;
 
--- Create a table 'conversations'
 CREATE TABLE IF NOT EXISTS messages.conversations (
     conversation_id uuid,
     belongs_to uuid,
@@ -17,9 +18,10 @@ CREATE TABLE IF NOT EXISTS messages.conversations (
     last_seen_message_id uuid,
     last_seen_message_timestamp timestamp,
     PRIMARY KEY (belongs_to, conversation_id)
-) WITH compression = {'class': 'LZ4Compressor'};
+) WITH compression = {
+    'sstable_compression': 'LZ4Compressor'
+};
 
--- Create a table 'private_messages'
 CREATE TABLE IF NOT EXISTS messages.private_messages (
     conversation_id uuid,
     id uuid,
@@ -30,4 +32,6 @@ CREATE TABLE IF NOT EXISTS messages.private_messages (
     updated_at timestamp,
     PRIMARY KEY ((conversation_id, recipient_id), created_at, id)
 ) WITH CLUSTERING ORDER BY (created_at DESC, id ASC)
-AND compression = {'class': 'LZ4Compressor'};
+AND compression = {
+    'sstable_compression': 'LZ4Compressor'
+};

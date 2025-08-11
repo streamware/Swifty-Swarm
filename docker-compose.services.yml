@@ -98,10 +98,10 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=6jliq83an911t0h9rw34l4q73k4xvmen0jbvd2b5
       - DB_NAME=presence
-      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_HOST=scylla
       - CASSANDRA_PORT=9042
-      - CASSANDRA_USER=cassandra
-      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_USER=scylla
+      - CASSANDRA_PASSWORD=scylla
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=
@@ -135,11 +135,11 @@ services:
     environment:
       - NAME=messenger-rest-engine
       - SERVER_PORT=8083
-      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_CONTACT_POINTS=scylla
       - CASSANDRA_KEYSPACE=messages
       - CASSANDRA_DATACENTER=datacenter1
-      - CASSANDRA_USERNAME=cassandra
-      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_USERNAME=
+      - CASSANDRA_PASSWORD=
     restart: on-failure
     networks:
       - default

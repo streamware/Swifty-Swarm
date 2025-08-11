@@ -1,24 +1,25 @@
 #!/bin/bash
+set -e
 
-# Variables for credentials and host
-CASSANDRA_HOST='127.0.0.1'
+CASSANDRA_HOST="scylla"
 CASSANDRA_PORT=9042
-USERNAME='cassandra'
-PASSWORD='cassandra'
+USERNAME="cassandra"
+PASSWORD="cassandra"
 
-# Function to check if Cassandra is ready
 cassandra_ready() {
-    cqlsh -e "describe keyspaces" "$CASSANDRA_HOST" "$CASSANDRA_PORT" -u "$USERNAME" -p "$PASSWORD" > /dev/null 2>&1
+    # cqlsh -u "$USERNAME" -p "$PASSWORD" "$CASSANDRA_HOST" "$CASSANDRA_PORT" -e "DESCRIBE KEYSPACES" > /dev/null 2>&1
+    cqlsh "$CASSANDRA_HOST" "$CASSANDRA_PORT" -e "DESCRIBE KEYSPACES" > /dev/null 2>&1
 }
 
-# Wait for Cassandra to be ready
-echo "Waiting for Cassandra to be ready..."
+echo "Waiting for Scylla to be ready..."
 until cassandra_ready; do
   sleep 5
   echo "Retrying..."
 done
 
-echo "Cassandra is ready. Executing setup script."
+echo "Scylla is ready. Running migrations..."
+# cqlsh -u "$USERNAME" -p "$PASSWORD" "$CASSANDRA_HOST" "$CASSANDRA_PORT" -f /usr/setup.cql
+cqlsh "$CASSANDRA_HOST" "$CASSANDRA_PORT" -f /usr/setup.cql
 
-# Run the CQL script
-cqlsh -u "$USERNAME" -p "$PASSWORD" -f /usr/setup.cql "$CASSANDRA_HOST" "$CASSANDRA_PORT"
+
+echo "Migration completed."
